@@ -11,27 +11,22 @@ const gpa = util.gpa;
 
 const data = @embedFile("../data/puzzle/day03.txt");
 
-fn sortByMaskFn(comptime mask: u64) fn ([]u64) u64 {
-    const impl = struct {
-        fn cmp(context: void, a: u64, b: u64) bool {
-            if (a & mask != 0 and b & mask == 0) {
-                return false;
-            } else {
-                return true;
-            }
-        }
+fn bitmaskCmp(context: u64, a: u64, b: u64) bool {
+    const mask = context;
+    if (a & mask != 0 and b & mask == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
 
-        fn inner(items: []u64) u64 {
-            // TODO(catalin): This sort can be done in one pass, and doesn't need comparisons.
-            sort(u64, items, {}, cmp);
-            var zeroes: u64 = 0;
-            while (zeroes < items.len and items[zeroes] & mask == 0) {
-                zeroes += 1;
-            }
-            return zeroes;
-        }
-    };
-    return impl.inner;
+fn sortWithMask(items: []u64, mask: u64) u64 {
+    sort(u64, items, mask, bitmaskCmp);
+    var zeroes: u64 = 0;
+    while (zeroes < items.len and items[zeroes] & mask == 0) {
+        zeroes += 1;
+    }
+    return zeroes;
 }
 
 // I'm sure these 2 are already defined somewhere...
@@ -43,31 +38,21 @@ fn cmpLe(a: u64, b: u64) bool {
     return a <= b;
 }
 
-// zig fmt: off
-const maskSorts = [_]fn ([]u64) u64{
-    sortByMaskFn(1 << 0), sortByMaskFn(1 << 1), sortByMaskFn(1 << 2), sortByMaskFn(1 << 3),
-    sortByMaskFn(1 << 4), sortByMaskFn(1 << 5), sortByMaskFn(1 << 6), sortByMaskFn(1 << 7),
-    sortByMaskFn(1 << 8), sortByMaskFn(1 << 9), sortByMaskFn(1 << 10), sortByMaskFn(1 << 11) };
-// zig fmt: on
-
 fn getPart2Result(items: []u64, bitCount: u64, cmpRule: fn (u64, u64) bool) u64 {
-    var maskIdx: u64 = bitCount - 1;
+    var mask = @as(u64, 1) << @intCast(u6, bitCount - 1);
     var first: u64 = 0;
     var last: u64 = items.len;
     var size: u64 = last - first;
     var zeroes: u64 = 0;
-    while (size > 1) {
-        zeroes = maskSorts[maskIdx](items[first..last]);
+    while (mask > 0 and size > 1) {
+        zeroes = sortWithMask(items[first..last], mask);
         if (cmpRule(zeroes * 2, size)) {
             last = first + zeroes;
         } else {
             first += zeroes;
         }
         size = last - first;
-        if (maskIdx == 0) {
-            break;
-        }
-        maskIdx -= 1;
+        mask >>= 1;
     }
     return items[first];
 }
