@@ -11,17 +11,8 @@ const gpa = util.gpa;
 
 const data = @embedFile("../data/puzzle/day03.txt");
 
-fn bitmaskCmp(context: u64, a: u64, b: u64) bool {
-    const mask = context;
-    if (a & mask != 0 and b & mask == 0) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
-fn sortWithMask(items: []u64, mask: u64) u64 {
-    sort(u64, items, mask, bitmaskCmp);
+fn countZeroes(items: []u64, mask: u64) u64 {
+    // TODO(catalin): This could be binary search.
     var zeroes: u64 = 0;
     while (zeroes < items.len and items[zeroes] & mask == 0) {
         zeroes += 1;
@@ -45,7 +36,7 @@ fn getPart2Result(items: []u64, bitCount: u64, cmpRule: fn (u64, u64) bool) u64 
     var size: u64 = last - first;
     var zeroes: u64 = 0;
     while (mask > 0 and size > 1) {
-        zeroes = sortWithMask(items[first..last], mask);
+        zeroes = countZeroes(items[first..last], mask);
         if (cmpRule(zeroes * 2, size)) {
             last = first + zeroes;
         } else {
@@ -96,6 +87,7 @@ pub fn main() !void {
     print("{} {} {}\n", .{ gamma, epsilon, gamma * epsilon });
 
     // Part 2
+    sort(u64, inputs.items, {}, comptime asc(u64));
     const oxygen = getPart2Result(inputs.items, bitCount, cmpGt);
     const co2 = getPart2Result(inputs.items, bitCount, cmpLe);
     print("{b:0>12} {b:0>12} {}\n", .{ oxygen, co2, oxygen * co2 });
