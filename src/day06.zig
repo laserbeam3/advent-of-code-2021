@@ -24,14 +24,12 @@ pub fn main() !void {
     // Fairly sure there's an O(1) solution as well...
     var day: u64 = 1;
     var lastDay: u64 = 256;
-    while (day <= lastDay) {
-        defer day += 1;
+    while (day <= lastDay) : (day += 1) {
 
         var c0 = counts[0];
         var idx: u64 = 0;
         var totalFish: u64 = 0;
-        while (idx < 8) {
-            defer idx += 1;
+        while (idx < 8) : (idx += 1) {
             counts[idx] = counts[idx + 1];
             totalFish += counts[idx];
         }
