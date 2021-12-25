@@ -1,6 +1,6 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const List = std.ArrayList;
+const ArrayList = std.ArrayList;
 const Map = std.AutoHashMap;
 const StrMap = std.StringHashMap;
 const BitSet = std.DynamicBitSet;
@@ -9,10 +9,58 @@ const Str = []const u8;
 const util = @import("util.zig");
 const gpa = util.gpa;
 
-const data = @embedFile("../data/day10.txt");
+const data = @embedFile("../data/puzzle/day10.txt");
 
 pub fn main() !void {
-    
+    var lines = tokenize(data, "\r\n");
+    var score: u64 = 0;
+    var completion = ArrayList(u64).init(gpa);
+    defer completion.deinit();
+    while (lines.next()) |line| {
+        var stack = ArrayList(u8).init(gpa);
+        defer stack.deinit();
+        loop: for (line) |char| {
+            switch (char) {
+                '(', '[', '{', '<' => try stack.append(char),
+                ')', ']', '}', '>' => {
+                    var x = stack.pop();
+                    if (char == ')' and x != '(') {
+                        score += 3;
+                        break :loop;
+                    }
+                    if (char == ']' and x != '[') {
+                        score += 57;
+                        break :loop;
+                    }
+                    if (char == '}' and x != '{') {
+                        score += 1197;
+                        break :loop;
+                    }
+                    if (char == '>' and x != '<') {
+                        score += 25137;
+                        break :loop;
+                    }
+                },
+                else => {},
+            }
+        } else {
+            var s: u64 = 0;
+            while (stack.popOrNull()) |x| {
+                s *= 5;
+                switch (x) {
+                    '(' => s += 1,
+                    '[' => s += 2,
+                    '{' => s += 3,
+                    '<' => s += 4,
+                    else => {},
+                }
+            }
+            try completion.append(s);
+        }
+    }
+    sort(u64, completion.items, {}, comptime asc(u64));
+    print("{}\n", .{score});
+    print("{}\n", .{completion.items[completion.items.len / 2]});
 }
 
 // Useful stdlib functions
